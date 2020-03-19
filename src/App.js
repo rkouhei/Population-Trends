@@ -8,22 +8,24 @@ class App extends Component {
     this.state = {
       selected: Array(47).fill(false),
       prefectures: {},
-      series: []
+      series: [],
+      loading: true
     }
-    this._changeSelection = this._changeSelection.bind(this);
+    this.changeSelection = this.changeSelection.bind(this);
   }
 
-  componentDidMount () {
-    fetch('https://opendata.resas-portal.go.jp/api/v1/prefectures', {
+  async componentDidMount () {
+    await fetch('https://opendata.resas-portal.go.jp/api/v1/prefectures', {
       headers: { 'X-API-KEY': process.env.REACT_APP_RESAS_API_KEY }
     })
       .then(response => response.json())
       .then(res => {
         this.setState({ prefectures: res.result })
     })
+    this.setState({loading: false})
   }
 
-  _changeSelection(index) {
+  changeSelection(index) {
     const selected_copy = this.state.selected.slice()
     selected_copy[index] = !selected_copy[index]
 
@@ -68,7 +70,7 @@ class App extends Component {
   renderItem(props) {
     return (
       <div key={props.prefCode} style={{ margin: '5px', display: 'inline-block' }}>
-        <input type="checkbox" checked={this.state.selected[props.prefCode - 1]} onChange={() => this._changeSelection(props.prefCode - 1)} />
+        <input type="checkbox" checked={this.state.selected[props.prefCode - 1]} onChange={() => this.changeSelection(props.prefCode - 1)} />
         {props.prefName}
       </div>
     )
@@ -78,8 +80,21 @@ class App extends Component {
     const obj = this.state.prefectures
     const options = {
       title: {
-        text: '人口推移'
+        text: '人口推移, 1965~2020'
       },
+
+      yAxis: {
+        title: {
+          text: 'Population'
+        }
+      },
+
+      xAxis: {
+        title: {
+          text: 'Year'
+        }
+      },
+
       plotOptions: {
         series: {
           label: {
@@ -93,7 +108,7 @@ class App extends Component {
     }
     return (
       <div>
-        <h1>都道府県別 総人口推移グラフ</h1>
+        <h1 align='center'>都道府県別 総人口推移グラフ</h1>
         {Object.keys(obj).map(i => this.renderItem(obj[i]))}
         <HighchartsReact highcharts={Highcharts} options={options} />
       </div>
